@@ -13,53 +13,68 @@ import {
     ToolbarAndroid,
     TouchableHighlight,
     Alert,
-    ScrollView
+    ScrollView,
+    Navigator
 } from 'react-native';
 
 
 var ProductItem = React.createClass({
 
-    render: function() {
-        var product_url= this.props.url;
+    render: function () {
+        var product_url = this.props.url;
         var image = this.props.image;
         var name = this.props.name;
 
 
-        return <TouchableHighlight onPress={() => this._pressRow(rowID)}>
-        <View style={styles.productContainer}>
-            <Image style={styles.productImage} source={{uri: image}} />
-            <Text style={styles.productText}>
-                {name}
-            </Text>
-        </View>
-      </TouchableHighlight>
+        return <TouchableHighlight onPress={() => this._pressRow(name)}>
+            <View style={styles.productContainer}>
+                <Image style={styles.productImage} source={{uri: image}}/>
+                <Text style={styles.productText}>
+                    {name}
+                </Text>
+            </View>
+        </TouchableHighlight>
 
     },
-    _pressRow: function(rowID){
-
+    _pressRow: function (text) {
+        this.props.navigator.push({
+  title: 'Product',
+  component: ProductView
+});
     }
 });
 
+var ProductView = React.createClass({
+    render: function () {
+        var name = this.props.name;
+        return <View>
+            {name}
+        </View>
+    }
+
+});
+
+
 var UnisportMobile = React.createClass({
 
-    getInitialState: function() {
+    getInitialState: function () {
         return {
             featuredProducts: ''
         };
     },
 
-    getFeaturedProducts: function() {
-         fetch('https://www.unisport.dk/api/products/featured/', {method: "GET"})
-                        .then((response) => response.json())
-        .then((responseData) => {
-            this.setState({
-                featuredProducts: responseData['products'].slice(0, 10)
-            });
-        })
-        .done();
+    getFeaturedProducts: function () {
+        fetch('https://www.unisport.dk/api/products/featured/', {method: "GET"})
+            .then((response) => response.json())
+            .then((responseData) => {
+                this.setState({
+                    featuredProducts: responseData['products'].slice(0, 20)
+                });
+            })
+            .done();
     },
 
-    componentDidMount: function() {
+    componentDidMount: function () {
         this.getFeaturedProducts()
     },
 
@@ -71,7 +86,7 @@ var UnisportMobile = React.createClass({
             this.state.featuredProducts.forEach(function (element) {
                 var name = element['name'];
                 var image = element['image'];
-               productNames.push(<ProductItem name={name} image={image} />)
+                productNames.push(<ProductItem name={name} image={image}/>)
             });
         }
 
@@ -81,17 +96,50 @@ var UnisportMobile = React.createClass({
                     style={styles.toolbar}
                     actions={[{title: '', icon: require('./menu.png'), show: 'always'}]}>
                     <View style={styles.toolbar}>
-                        <Image style={styles.logo} source={require('./app_logo.png')} />
+                        <Image style={styles.logo} source={require('./app_logo.png')}/>
                     </View>
                 </ToolbarAndroid>
-                <View style={styles.content}>
-                    <ScrollView automaticallyAdjustContentInsets={false}>
+                <ScrollView ref='scrollView' keyboardDismissMode='interactive'
+                            style={styles.scrollView} contentContainerStyle={styles.content}>
                     {productNames}
-                    </ScrollView>
-                </View>
+                </ScrollView>
             </View>
         )
     }
+});
+
+
+var NavigatorUnisport = React.createClass({
+
+    render: function() {
+    return (
+      <Navigator
+          initialRoute={{id: 'IndexPage', name: 'Index'}}
+          renderScene={this.renderScene.bind(this)}
+          configureScene={(route) => {
+            if (route.sceneConfig) {
+              return route.sceneConfig;
+            }
+            return Navigator.SceneConfigs.FloatFromRight;
+          }} />
+    );
+  },
+  renderScene(route, navigator) {
+    var routeId = route.id;
+    if (routeId === 'IndexPage') {
+      return (
+        <SplashPage
+          navigator={navigator} />
+      );
+    }
+    if (routeId === 'ProductPage') {
+      return (
+        <ProductView
+          navigator={navigator} />
+      );
+    }
+  }
+
 });
 
 var styles = StyleSheet.create({
@@ -137,7 +185,10 @@ var styles = StyleSheet.create({
         flexDirection: 'row',
         fontWeight: 'bold',
         color: 'black',
-    }
+    },
+    scrollView: {
+        flex: 1,
+    },
 });
 
 AppRegistry.registerComponent('UnisportMobile', () => UnisportMobile);
