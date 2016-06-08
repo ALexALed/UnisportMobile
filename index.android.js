@@ -21,7 +21,6 @@ import {
 var ProductItem = React.createClass({
 
     render: function () {
-        var product_url = this.props.url;
         var image = this.props.image;
         var name = this.props.name;
 
@@ -38,24 +37,46 @@ var ProductItem = React.createClass({
     },
     _pressRow: function (text) {
         this.props.navigator.push({
-  title: 'Product',
-  component: ProductView
-});
+        id: 'product_view',
+        product_name: this.props.name,
+        product_image: this.props.image,
+        product_price: this.props.price.substring(0, this.props.price.length-2) + '.' + this.props.price.substring(this.props.price.length-2),
+        product_currency: this.props.currency
+    });
     }
 });
 
 var ProductView = React.createClass({
     render: function () {
         var name = this.props.name;
+        var image = this.props.image;
+        var currency = this.props.currency;
+        var price = this.props.price;
         return <View>
-            {name}
+                <Image style={styles.productImageLarge} source={{uri: image}}/>
+                <Text style={styles.productTextLarge}>
+                    {name}
+                </Text>
+                  <Text style={styles.price}>
+                    Price: {price} {currency}
+                </Text>
+
+            <TouchableHighlight onPress={this._onPressButton}>
+                <View><Text>
+                     Back </Text></View>
+                </TouchableHighlight>
         </View>
+    },
+
+    _onPressButton: function () {
+         this.props.navigator.push({
+        id: 'featured_products'});
     }
 
 });
 
 
-var UnisportMobile = React.createClass({
+var UnisportFeatured = React.createClass({
 
     getInitialState: function () {
         return {
@@ -79,6 +100,7 @@ var UnisportMobile = React.createClass({
     },
 
     render: function () {
+        var navigator = this.props.navigator;
 
         var productNames = [];
         this.getFeaturedProducts();
@@ -86,7 +108,9 @@ var UnisportMobile = React.createClass({
             this.state.featuredProducts.forEach(function (element) {
                 var name = element['name'];
                 var image = element['image'];
-                productNames.push(<ProductItem name={name} image={image}/>)
+                var price = element['price'];
+                var currency = element['currency'];
+                productNames.push(<ProductItem navigator={navigator} name={name} image={image} price={price} currency={currency}/>)
             });
         }
 
@@ -109,38 +133,27 @@ var UnisportMobile = React.createClass({
 });
 
 
-var NavigatorUnisport = React.createClass({
-
-    render: function() {
+class UnisportMobile extends React.Component{
+  render() {
     return (
       <Navigator
-          initialRoute={{id: 'IndexPage', name: 'Index'}}
-          renderScene={this.renderScene.bind(this)}
-          configureScene={(route) => {
-            if (route.sceneConfig) {
-              return route.sceneConfig;
-            }
-            return Navigator.SceneConfigs.FloatFromRight;
-          }} />
+        style={styles.container}
+        initialRoute={{id: 'featured_products'}}
+        renderScene={this.navigatorRenderScene}/>
     );
-  },
-  renderScene(route, navigator) {
-    var routeId = route.id;
-    if (routeId === 'IndexPage') {
-      return (
-        <SplashPage
-          navigator={navigator} />
-      );
-    }
-    if (routeId === 'ProductPage') {
-      return (
-        <ProductView
-          navigator={navigator} />
-      );
-    }
   }
 
-});
+  navigatorRenderScene(route, navigator) {
+    _navigator = navigator;
+    switch (route.id){
+      case 'featured_products':
+        return (<UnisportFeatured navigator={navigator}/>);
+      case 'product_view':
+        return (<ProductView navigator={navigator} name={route.product_name} 
+                             image={route.product_image} price={route.product_price} currency={route.product_currency}/>);
+    }
+  }
+}
 
 var styles = StyleSheet.create({
 
@@ -171,6 +184,12 @@ var styles = StyleSheet.create({
         height: 90,
         marginTop: 5,
     },
+    productImageLarge: {
+        width: 300,
+        height: 400,
+        marginTop: 5,
+        alignSelf: 'center'
+    },
     productContainer: {
         height: 100,
         flex: 1,
@@ -188,6 +207,18 @@ var styles = StyleSheet.create({
     },
     scrollView: {
         flex: 1,
+    },
+    price:{
+        width: 130,
+        height: 110,
+        color: '#08ac51',
+        fontWeight: 'bold',
+        alignSelf: 'center',
+    },
+    productTextLarge: {
+        alignSelf: 'center',
+        fontSize: 16,
+        color: 'black'
     },
 });
 
