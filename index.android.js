@@ -25,7 +25,7 @@ var ProductItem = React.createClass({
         var name = this.props.name;
 
 
-        return <TouchableHighlight onPress={() => this._pressRow(name)}>
+        return <TouchableHighlight onPress={() => this._pressRow()}>
             <View style={styles.productContainer}>
                 <Image style={styles.productImage} source={{uri: image}}/>
                 <Text style={styles.productText}>
@@ -35,7 +35,7 @@ var ProductItem = React.createClass({
         </TouchableHighlight>
 
     },
-    _pressRow: function (text) {
+    _pressRow: function () {
         this.props.navigator.push({
         id: 'product_view',
         product_name: this.props.name,
@@ -53,6 +53,7 @@ var ProductView = React.createClass({
         var currency = this.props.currency;
         var price = this.props.price;
         return <View>
+            <ToolbarUnisport />
                 <Image style={styles.productImageLarge} source={{uri: image}}/>
                 <Text style={styles.productTextLarge}>
                     {name}
@@ -76,6 +77,25 @@ var ProductView = React.createClass({
 });
 
 
+var ToolbarUnisport = React.createClass({
+    
+    render: function(){
+
+        var toolbarActions = [
+  {title: '', icon: require('./menu.png'), show: 'always'},
+];
+        return <ToolbarAndroid
+                    style={styles.toolbar}
+                    actions={toolbarActions}>
+                    <View style={styles.toolbar}>
+                        <Image style={styles.logo} source={require('./app_logo.png')}/>
+                    </View>
+                </ToolbarAndroid>
+    }
+    
+});
+
+
 var UnisportFeatured = React.createClass({
 
     getInitialState: function () {
@@ -89,7 +109,7 @@ var UnisportFeatured = React.createClass({
             .then((response) => response.json())
             .then((responseData) => {
                 this.setState({
-                    featuredProducts: responseData['products'].slice(0, 20)
+                    featuredProducts: responseData['products'].slice(0, 50)
                 });
             })
             .done();
@@ -116,13 +136,7 @@ var UnisportFeatured = React.createClass({
 
         return (
             <View style={styles.mainContainer}>
-                <ToolbarAndroid
-                    style={styles.toolbar}
-                    actions={[{title: '', icon: require('./menu.png'), show: 'always'}]}>
-                    <View style={styles.toolbar}>
-                        <Image style={styles.logo} source={require('./app_logo.png')}/>
-                    </View>
-                </ToolbarAndroid>
+                <ToolbarUnisport />
                 <ScrollView ref='scrollView' keyboardDismissMode='interactive'
                             style={styles.scrollView} contentContainerStyle={styles.content}>
                     {productNames}
